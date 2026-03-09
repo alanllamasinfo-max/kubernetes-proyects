@@ -1,35 +1,34 @@
 #!/bin/bash
 
-# 1. Colores
+# Colores
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' 
 
-echo -e "${BLUE}🧹 Iniciando limpieza profunda del Proyecto 2...${NC}"
+echo -e "${BLUE}🧹 Limpiando el escenario del Proyecto 3 (Worker + HPA)...${NC}"
 
-# 2. Eliminar Deployments (Esto detiene los Pods automáticamente)
-echo -e "🗑️  Eliminando Deployments..."
-kubectl delete deployment fastapi-api redis-db --ignore-not-found
+# 1. Eliminar el Autoscaler (HPA)
+echo -e "🗑️  Eliminando reglas de escalado (HPA)..."
+kubectl delete hpa worker-hpa --ignore-not-found
 
-# 3. Eliminar Servicios (Libera los puertos y el LoadBalancer de Minikube)
-echo -e "🗑️  Eliminando Servicios..."
-kubectl delete service api-service redis-service --ignore-not-found
+# 2. Eliminar el Deployment y Service del Worker
+echo -e "🗑️  Eliminando Deployment del Worker..."
+kubectl delete deployment worker-ia --ignore-not-found
 
-# 4. Eliminar TODOS los ConfigMaps del proyecto
-echo -e "🗑️  Eliminando Configuraciones y Código..."
-kubectl delete configmap api-config api-code --ignore-not-found
+# 3. Eliminar Redis (Base de datos y cola)
+echo -e "🗑️  Eliminando Redis..."
+kubectl delete deployment redis-db --ignore-not-found
+kubectl delete service redis-service --ignore-not-found
 
-# 5. LIMPIEZA EXTRA: Eliminar ReplicaSets huérfanos
-# A veces quedan ReplicaSets antiguos con 'DESIRED 0' que ensucian el 'kubectl get all'
-echo -e "🗑️  Limpiando historial de despliegues (ReplicaSets)..."
-kubectl delete rs -l app=fastapi-app --ignore-not-found
-kubectl delete rs -l app=redis --ignore-not-found
+# 4. Eliminar el código inyectado
+echo -e "🗑️  Eliminando ConfigMap de código..."
+kubectl delete configmap worker-code --ignore-not-found
 
-# 6. Forzar eliminación de Pods en estado 'Terminating' (si los hubiera)
-# Esto asegura que no tengas que esperar minutos a que el cluster se limpie solo
-kubectl delete pods -l app=fastapi-app --grace-period=0 --force --ignore-not-found 2>/dev/null
+# 5. Limpieza de procesos antiguos (ReplicaSets y Pods)
+echo -e "🗑️  Borrando rastros de Pods antiguos..."
+kubectl delete rs -l app=worker-ia --ignore-not-found
+# Forzamos si queda alguno atascado por el estrés de la CPU
+kubectl delete pods -l app=worker-ia --grace-period=0 --force --ignore-not-found 2>/dev/null
 
-echo -e "${RED}⚠️  Limpieza completada. El clúster está listo para un nuevo despliegue.${NC}"
-
-# 7. Verificación final
+echo -e "${RED}⚠️  Sistema limpio. El servidor de métricas sigue activo pero sin carga.${NC}"
 kubectl get all

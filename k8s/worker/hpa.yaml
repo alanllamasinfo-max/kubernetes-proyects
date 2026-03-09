@@ -1,0 +1,20 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: worker-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker-ia
+  minReplicas: 1
+  maxReplicas: 5 # No queremos que nos arruine la cuenta de AWS en el futuro
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 10
+# Si el CPU promedio supera el 50%, se escala hacia arriba maximo 5 replicas, si baja del 50% se escala hacia abajo hasta un minimo de 1 replica.
+#hace falta lanza esto antes minikube addons enable metrics-server para que el HPA pueda obtener las métricas de CPU.

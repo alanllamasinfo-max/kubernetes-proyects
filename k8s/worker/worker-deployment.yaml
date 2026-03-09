@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-ia
+spec:
+  replicas: 1 # Empezamos con 1 solo "obrero"
+  selector:
+    matchLabels:
+      app: worker-ia
+  template:
+    metadata:
+      labels:
+        app: worker-ia
+    spec:
+      containers:
+      - name: worker
+        image: python:3.9-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            pip install redis
+            python /app/worker.py
+        resources:
+          requests:
+            cpu: "100m" # Reserva el 10% de un núcleo
+          limits:
+            cpu: "200m" # Máximo el 20% de un núcleo
+        volumeMounts:
+        - name: code-volume
+          mountPath: /app/worker.py
+          subPath: worker.py
+      volumes:
+      - name: code-volume
+        configMap:
+          name: worker-code
