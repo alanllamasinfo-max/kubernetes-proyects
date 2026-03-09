@@ -1,0 +1,33 @@
+# Definimos el despliegue del contenedor
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-db
+spec:
+  replicas: 1 # Solo necesitamos una base de datos por ahora
+  selector:
+    matchLabels:
+      app: redis # Busca pods que tengan esta etiqueta
+  template:
+    metadata:
+      labels:
+        app: redis # Etiqueta que se le pone al pod al nacer
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379 # Puerto interno de Redis
+---
+# Definimos cómo acceder a Redis desde otros pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service # IMPORTANTE: Este será el "nombre de dominio" interno
+spec:
+  selector:
+    app: redis # Conecta este servicio con los pods que tengan la etiqueta 'app: redis'
+  ports:
+    - protocol: TCP
+      port: 6379 # Puerto del servicio
+      targetPort: 6379 # Puerto al que apunta en el contenedor

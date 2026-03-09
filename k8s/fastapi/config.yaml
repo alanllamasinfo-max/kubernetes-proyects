@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  # Esta variable la leerá Python con os.getenv("REDIS_HOST")
+  REDIS_HOST: "redis-service"
