@@ -15,12 +15,25 @@ spec:
       containers:
       - name: fastapi-container
         image: tiangolo/uvicorn-gunicorn-fastapi:python3.9
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install redis
+            /start.sh
+        ports:
+        - containerPort: 80
         # Aquí inyectamos las variables del ConfigMap que hicimos arriba
         envFrom:
         - configMapRef:
             name: api-config
-        ports:
-        - containerPort: 80
+        volumeMounts:
+        - name: code-volume
+          mountPath: /app/main.py
+          subPath: main.py
+      volumes:
+      - name: code-volume
+        configMap:
+          name: api-code
 ---
 apiVersion: v1
 kind: Service
